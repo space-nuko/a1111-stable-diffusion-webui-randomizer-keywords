@@ -1,7 +1,20 @@
 # Randomizer Keywords
 This extension for stable-diffusion-webui adds some keywords using the extra networks syntax to allow randomization of parameters when combined with the [Dynamic Prompts](https://github.com/adieyal/sd-dynamic-prompts/tree/main/sd_dynamic_prompts) extension.
 
-## Usage
+## Example
+When used with Dynamic Prompts, this prompt will pick from a random checkpoint each batch:
+
+```
+{<checkpoint:animefull-latest>|<checkpoint:wd15-beta1-fp32>}
+```
+
+You can also assemble a wildcard list containing text like model names to choose from, and deploy them inside the keywords:
+
+```
+<addnet_model_1:__artist_loras__>
+```
+
+## List of Keywords
 This extension adds the following special keywords to be used in prompts:
 
 - `<checkpoint:animefull-latest.ckpt>` - SD Checkpoint
@@ -34,16 +47,3 @@ This extension adds the following special keywords to be used in prompts:
 - `<addnet_tenc_weight_1:1.0>` - Additional Networks TEnc Weight (up to 5)
 
 **NOTE**: These keywords will be applied *per-batch*, not per-prompt. This is because you can't change things like checkpoints or sampler parameters for individual images in a batch.
-
-## Example
-When used with Dynamic Prompts, this prompt will pick from a random checkpoint each batch:
-
-```
-{<checkpoint:animefull-latest>|<checkpoint:wd15-beta1-fp32>}
-```
-
-You can also assemble a wildcard list containing text like model names to choose from, and deploy them inside the keywords:
-
-```
-<addnet_model_1:__artist_loras__>
-```
