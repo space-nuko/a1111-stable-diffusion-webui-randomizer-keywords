@@ -304,8 +304,8 @@ sampler_params = [
     RandomizerKeywordSamplerParam("subseed_strength", float, 0),
     RandomizerKeywordSamplerParam("sampler_name", str, validate_cb=validate_sampler_name),
     RandomizerKeywordSamplerParam("steps", int, 1),
-    RandomizerKeywordSamplerParam("width", int, 64, adjust_cb=lambda x, p: x % 8),
-    RandomizerKeywordSamplerParam("height", int, 64, adjust_cb=lambda x, p: x % 8),
+    RandomizerKeywordSamplerParam("width", int, 64, adjust_cb=lambda x, p: x - (x % 8)),
+    RandomizerKeywordSamplerParam("height", int, 64, adjust_cb=lambda x, p: x - (x % 8)),
     RandomizerKeywordSamplerParam("tiling", bool),
     RandomizerKeywordSamplerParam("restore_faces", bool),
     RandomizerKeywordSamplerParam("s_churn", float),
@@ -320,8 +320,8 @@ sampler_params = [
     RandomizerKeywordSamplerParam("hr_upscaler", str, op_type="txt2img"),
     RandomizerKeywordSamplerParam("hr_scale", float, 0, op_type="txt2img"),
     RandomizerKeywordSamplerParam("hr_second_pass_steps", int, 1, op_type="txt2img"),
-    RandomizerKeywordSamplerParam("hr_upscale_to_x", int, 64, adjust_cb=lambda x, p: x % 8, op_type="txt2img"),
-    RandomizerKeywordSamplerParam("hr_upscale_to_y", int, 64, adjust_cb=lambda x, p: x % 8, op_type="txt2img"),
+    RandomizerKeywordSamplerParam("hr_upscale_to_x", int, 64, adjust_cb=lambda x, p: x - (x % 8), op_type="txt2img"),
+    RandomizerKeywordSamplerParam("hr_upscale_to_y", int, 64, adjust_cb=lambda x, p: x - (x % 8), op_type="txt2img"),
 
     # img2img
     RandomizerKeywordSamplerParam("mask_blur", float, op_type="img2img"),
@@ -355,9 +355,7 @@ all_params = []
 
 
 def on_app_started(demo, app):
-    global loaded, all_params
-    if loaded:
-        return
+    global all_params
 
     for s in scripts.scripts_data:
         for m, params in supported_modules.items():

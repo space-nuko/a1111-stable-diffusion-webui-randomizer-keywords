@@ -8,6 +8,11 @@ When used with Dynamic Prompts, this prompt will pick from a random checkpoint e
 {<checkpoint:animefull-latest>|<checkpoint:wd15-beta1-fp32>}
 ```
 
+And you can use random choices inside keywords, too:
+```
+<width:{512|768}>, <height:{512|768}>
+```
+
 You can also assemble a wildcard list containing text like model names to choose from, and deploy it inside the keywords:
 
 ```
