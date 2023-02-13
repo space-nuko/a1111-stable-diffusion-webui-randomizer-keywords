@@ -225,7 +225,8 @@ def update_extension_args(ext_name, p, value, arg_idx):
     args = list(p.script_args)
 
     if is_debug():
-        print(f"[RandomizerKeywords] For {ext_name}: Changed arg {arg_idx} from {args[script.args_from + arg_idx - 1]} to {value}")
+        print(f"[RandomizerKeywords] Args in {ext_name}: {args[script.args_from:script.args_to]}")
+        print(f"[RandomizerKeywords] For {ext_name}: Changed arg {arg_idx} from {args[script.args_from + arg_idx]} to {value}")
 
     args[script.args_from + arg_idx] = value
     p.script_args = tuple(args)
@@ -305,13 +306,13 @@ sampler_params = [
     RandomizerKeywordSamplerParam("steps", int, 1),
     RandomizerKeywordSamplerParam("width", int, 64, adjust_cb=lambda x, p: x % 8),
     RandomizerKeywordSamplerParam("height", int, 64, adjust_cb=lambda x, p: x % 8),
-    RandomizerKeywordSamplerParam("eta", float, 0),
     RandomizerKeywordSamplerParam("tiling", bool),
-    RandomizerKeywordSamplerParam("s_churn", float),
     RandomizerKeywordSamplerParam("restore_faces", bool),
+    RandomizerKeywordSamplerParam("s_churn", float),
     RandomizerKeywordSamplerParam("s_tmin", float),
     RandomizerKeywordSamplerParam("s_tmax", float),
     RandomizerKeywordSamplerParam("s_noise", float),
+    RandomizerKeywordSamplerParam("eta", float, 0),
     RandomizerKeywordSamplerParam("ddim_discretize", str),
     RandomizerKeywordSamplerParam("denoising_strength", float),
 
@@ -350,25 +351,26 @@ for i in range(5):
     ])
 
 
-# NOTE: Our folder name happens to come after additional_networks in
-# alphabetical order, but we should not rely on this!
-for s in scripts.scripts_data:
-    for m, params in supported_modules.items():
-        if s.module.__name__ == m + ".py":
-            assert m not in extension_modules
-            print(f"[RandomizerKeywords] Adding support for extension: {m}")
-            extension_modules[m] = s.module
-            extension_classes[m] = s.script_class
-            extension_params.extend(params)
+all_params = []
 
 
-all_params = config_params + sampler_params + other_params + extension_params
+def on_app_started(demo, app):
+    global loaded, all_params
+    if loaded:
+        return
 
+    for s in scripts.scripts_data:
+        for m, params in supported_modules.items():
+            if s.module.__name__ == m + ".py":
+                assert m not in extension_modules
+                print(f"[RandomizerKeywords] Adding support for extension: {m}")
+                extension_modules[m] = s.module
+                extension_classes[m] = s.script_class
+                extension_params.extend(params)
 
-print(f"[RandomizerKeywords] Supported keywords: {', '.join([p.name for p in all_params])}")
+    all_params = config_params + sampler_params + other_params + extension_params
+    print(f"[RandomizerKeywords] Supported keywords: {', '.join([p.name for p in all_params])}")
 
-
-def on_before_ui():
     for param in all_params:
         extra_networks.register_extra_network(param)
 
@@ -379,5 +381,5 @@ def on_ui_settings():
     shared.opts.add_option("randomizer_keywords_strip_keywords", shared.OptionInfo(True, "Strip randomizer keywords out of prompts", section=section))
 
 
-script_callbacks.on_before_ui(on_before_ui)
+script_callbacks.on_app_started(on_app_started)
 script_callbacks.on_ui_settings(on_ui_settings)
