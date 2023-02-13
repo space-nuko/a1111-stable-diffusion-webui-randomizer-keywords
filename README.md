@@ -10,7 +10,8 @@ The following keywords were added:
 **NOTE**: These keywords will be applied *per-batch*, not per-prompt. This is because you can't change things like checkpoints or sampler parameters for a single batch of images.
 
 ## Example
-This prompt will pick from a random CFG scale each batch:
+When used with dynamic_prompts, this prompt will pick from a random checkpoint each batch:
 
-## Extension
-Other extensions can add their own keywords.
+```
+{<checkpoint:animefull-latest>|<checkpoint:wd15-beta1-fp32>}
+```
