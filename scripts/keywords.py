@@ -378,7 +378,6 @@ def on_app_started(demo, app):
 def on_ui_settings():
     section = ('randomizer_keywords', "Randomizer Keywords")
     shared.opts.add_option("randomizer_keywords_debug", shared.OptionInfo(False, "Print debug messages", section=section))
-    shared.opts.add_option("randomizer_keywords_strip_keywords", shared.OptionInfo(True, "Strip randomizer keywords out of prompts", section=section))
 
 
 script_callbacks.on_app_started(on_app_started)
