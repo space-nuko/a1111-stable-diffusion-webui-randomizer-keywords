@@ -7,10 +7,42 @@ operations = {
     "txt2img": processing.StableDiffusionProcessingTxt2Img,
     "img2img": processing.StableDiffusionProcessingImg2Img,
 }
+needs_hr_recalc = False
 
 
 def is_debug():
     return shared.opts.data.get("randomizer_keywords_debug", False)
+
+
+def recalc_hires_fix(p):
+    def print_params(p):
+        print(f"- width: {p.width}")
+        print(f"- height: {p.height}")
+        print(f"- hr_upscaler: {p.hr_upscaler}")
+        print(f"- hr_second_pass_steps: {p.hr_second_pass_steps}")
+        print(f"- hr_scale: {p.hr_scale}")
+        print(f"- hr_resize_x: {p.hr_resize_x}")
+        print(f"- hr_resize_y: {p.hr_resize_y}")
+        print(f"- hr_upscale_to_x: {p.hr_upscale_to_x}")
+        print(f"- hr_upscale_to_y: {p.hr_upscale_to_y}")
+
+    if isinstance(p, processing.StableDiffusionProcessingTxt2Img):
+        if is_debug():
+            print("[RandomizerKeywords] Recalculating Hires. fix")
+            print("Before:")
+            print_params(p)
+
+        shared.state.job_count = -1
+        for param in ["Hires upscale", "Hires resize", "Hires steps", "Hires upscaler"]:
+            p.extra_generation_params.pop(param, None)
+
+        # Don't want code duplication
+        p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
+
+        if is_debug():
+            print("====================")
+            print("After:")
+            print_params(p)
 
 
 class RandomizerKeywordConfigOption(extra_networks.ExtraNetwork):
@@ -109,6 +141,10 @@ class RandomizerKeywordSamplerParam(extra_networks.ExtraNetwork):
             print(f"[RandomizerKeywords] Set SAMPLER option: {self.name} -> {value}")
 
         setattr(p, self.name, value)
+
+        global needs_hr_recalc
+        if self.name == "width" or self.name == "height" or self.name.startswith("hr_"):
+            needs_hr_recalc = True
 
     def deactivate(self, p):
         pass
@@ -272,10 +308,6 @@ class RandomizerKeywordExtAddNetWeight(extra_networks.ExtraNetwork):
         if not params_list:
             return
 
-        model_util = sys.modules.get("scripts.model_util")
-        if not model_util:
-            raise RuntimeError("Could not load additional_networks model_util")
-
         value = float(params_list[0].items[0])
 
         # enabled, separate_weights, (module, model, {weight_unet, weight_tenc}), ...
@@ -288,6 +320,20 @@ class RandomizerKeywordExtAddNetWeight(extra_networks.ExtraNetwork):
     def deactivate(self, p):
         pass
 
+
+class Script(scripts.Script):
+    def title(self):
+        return "Randomizer Keywords"
+
+    def show(self, is_img2img):
+        return scripts.AlwaysVisible
+
+    def process_batch(self, p, *args, **kwargs):
+        global needs_hr_recalc
+        if needs_hr_recalc:
+            recalc_hires_fix(p)
+
+        needs_hr_recalc = False
 
 
 config_params = [
@@ -317,11 +363,11 @@ sampler_params = [
     RandomizerKeywordSamplerParam("denoising_strength", float),
 
     # txt2img
+    RandomizerKeywordSamplerParam("hr_scale", float, 1, op_type="txt2img"),
     RandomizerKeywordSamplerParam("hr_upscaler", str, op_type="txt2img"),
-    RandomizerKeywordSamplerParam("hr_scale", float, 0, op_type="txt2img"),
     RandomizerKeywordSamplerParam("hr_second_pass_steps", int, 1, op_type="txt2img"),
-    RandomizerKeywordSamplerParam("hr_upscale_to_x", int, 64, adjust_cb=lambda x, p: x - (x % 8), op_type="txt2img"),
-    RandomizerKeywordSamplerParam("hr_upscale_to_y", int, 64, adjust_cb=lambda x, p: x - (x % 8), op_type="txt2img"),
+    RandomizerKeywordSamplerParam("hr_resize_x", int, 64, adjust_cb=lambda x, p: x - (x % 8), op_type="txt2img"),
+    RandomizerKeywordSamplerParam("hr_resize_y", int, 64, adjust_cb=lambda x, p: x - (x % 8), op_type="txt2img"),
 
     # img2img
     RandomizerKeywordSamplerParam("mask_blur", float, op_type="img2img"),
