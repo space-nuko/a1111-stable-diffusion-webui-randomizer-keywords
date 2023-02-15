@@ -32,7 +32,6 @@ def recalc_hires_fix(p):
             print("Before:")
             print_params(p)
 
-        shared.state.job_count = -1
         for param in ["Hires upscale", "Hires resize", "Hires steps", "Hires upscaler"]:
             p.extra_generation_params.pop(param, None)
 
@@ -315,7 +314,7 @@ class RandomizerKeywordExtAddNetWeight(extra_networks.ExtraNetwork):
         if self.kind is None or self.kind == "unet":
             update_extension_args("additional_networks", p, value, 4 + 4 * self.index)
         if self.kind is None or self.kind == "tenc":
-            update_extension_args("additional_networks", p, value, 5 + 4 * self.idnex)
+            update_extension_args("additional_networks", p, value, 5 + 4 * self.index)
 
     def deactivate(self, p):
         pass
